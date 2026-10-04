@@ -2,12 +2,14 @@
 // ASTROVA FRONTEND
 // ============================================================
 
-// When Flask serves the dashboard, use its origin. Keep the port-5000
-// fallback so the frontend also works from a separate live-server port.
+// Local previews use Flask on port 5000; deployed pages use the Railway API.
+const IS_LOCAL_PREVIEW =
+    window.location.protocol === "file:" ||
+    ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname);
 const API_BASE =
-    window.location.port === "5000"
-        ? window.location.origin
-        : "http://127.0.0.1:5000";
+    IS_LOCAL_PREVIEW
+        ? "http://127.0.0.1:5000"
+        : "https://astrova-backend-production.up.railway.app";
 
 
 // ============================================================

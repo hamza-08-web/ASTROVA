@@ -8,11 +8,14 @@ The runtime needs `server.py` and `ASTROVA/backend/expo_model.pkl`.
 The database, virtual environment, and experimental datasets are not required.
 The bundled model uses simulated features and is intended for demonstration.
 
-After deployment, generate a public domain in Railway's service networking settings.
-Verify `https://YOUR-RAILWAY-DOMAIN/api/health`, then connect the frontend to that domain.
-The frontend currently uses a local API address; publishing the backend alone does not change that address.
+The public backend is `https://astrova-backend-production.up.railway.app`.
+Verify `/api/health` for availability. Deployed frontend pages use this API;
+local previews use Flask at `http://127.0.0.1:5000`.
 
 # Vercel frontend
 
 Keep the Vercel root directory at the repository root. `vercel.json` publishes only
 `ASTROVA/frontend`, so the backend and model are not included in the static site.
+
+Frontend: https://astrova-frontend-pearl.vercel.app/
+Railway project: https://railway.com/project/cac7fb8e-1bcf-4e59-ab89-3219a2d8d77f
