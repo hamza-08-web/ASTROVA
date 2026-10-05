@@ -344,6 +344,9 @@ async function analyzeRegion() {
         "Running ASTROVA AI analysis...";
     const satelliteDetails = document.getElementById("satelliteDetails");
     satelliteDetails.textContent = "";
+    document.getElementById("prospectivity").textContent = "--";
+    document.getElementById("prospectivityStatus").textContent = "AWAITING ANALYSIS";
+    latestAnalysis = {score: null, mineral: null, plan: []};
 
 
     try {
