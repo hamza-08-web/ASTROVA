@@ -10,3 +10,4 @@ venv/
 *.sqlite3
 *.sqlite3-*
 .vercel/
+node_modules/
