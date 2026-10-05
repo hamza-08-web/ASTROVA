@@ -8,7 +8,7 @@ from pathlib import Path
 from datetime import date, timedelta
 
 BASE_DIR = Path(__file__).resolve().parent
-FRONTEND_DIR = BASE_DIR / "ASTROVA" / "frontend"
+FRONTEND_DIR = BASE_DIR / "frontend"
 
 app = Flask(__name__)
 CORS(app)
@@ -17,7 +17,7 @@ CORS(app)
 # LOAD ASTROVA AI MODEL
 # ============================================================
 
-MODEL_PATH = BASE_DIR / "ASTROVA" / "backend" / "expo_model.pkl"
+MODEL_PATH = BASE_DIR / "backend" / "expo_model.pkl"
 
 model = joblib.load(MODEL_PATH)
 
