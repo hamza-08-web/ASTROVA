@@ -342,6 +342,8 @@ async function analyzeRegion() {
 
     message.textContent =
         "Running ASTROVA AI analysis...";
+    const satelliteDetails = document.getElementById("satelliteDetails");
+    satelliteDetails.textContent = "";
 
 
     try {
@@ -363,6 +365,7 @@ async function analyzeRegion() {
                     body: JSON.stringify({
 
                         mineral: mineral,
+                        data_source: document.getElementById("dataSource").value,
 
                         latitude: latitude,
 
@@ -376,9 +379,9 @@ async function analyzeRegion() {
 
 
         if (!response.ok) {
-
+            const failure = await response.json().catch(() => ({}));
             throw new Error(
-                `Backend returned ${response.status}`
+                failure.error || `Backend returned ${response.status}`
             );
 
         }
@@ -434,6 +437,9 @@ async function analyzeRegion() {
             longitude: longitude,
             plan: data.production_plan || []
         };
+        satelliteDetails.textContent = data.satellite
+            ? `${data.satellite.provider} · Observation: ${data.satellite.observation_date} · ${data.satellite.valid_pixel_percent}% valid pixels · 200 m area. ${data.model_scope}`
+            : "Demo uses simulated satellite features. Mineral scores and operating plans are prototype estimates.";
 
 
         // ----------------------------------------------------

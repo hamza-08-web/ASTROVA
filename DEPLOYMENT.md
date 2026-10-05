@@ -19,3 +19,11 @@ Keep the Vercel root directory at the repository root. `vercel.json` publishes o
 
 Frontend: https://astrova-frontend-pearl.vercel.app/
 Railway project: https://railway.com/project/cac7fb8e-1bcf-4e59-ab89-3219a2d8d77f
+
+## Copernicus credentials
+
+Set `SH_CLIENT_ID` and `SH_CLIENT_SECRET` on the Railway `astrova-backend` service.
+These must belong to a Copernicus Data Space Sentinel Hub OAuth client with the
+Client Credentials grant type. `/api/health` reports `satellite_configured` when
+both variables are present; successful live analysis is required to verify access.
+Missing credentials produce a clear 503 in live mode. Demo mode remains available.

@@ -6,3 +6,4 @@ joblib==1.6.0
 numpy==2.5.3
 scipy==1.18.1
 gunicorn==23.0.0
+requests==2.34.2

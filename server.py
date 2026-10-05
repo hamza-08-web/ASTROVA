@@ -6,6 +6,7 @@ import math
 import secrets
 from pathlib import Path
 from datetime import date, timedelta
+from backend.satellite import sentinel, configured, SatelliteError
 
 BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR / "frontend"
@@ -253,7 +254,7 @@ def generate_features(latitude, longitude, mineral, time_seed=0.0):
 # AI ANALYSIS
 # ============================================================
 
-def calculate_prediction(latitude, longitude, mineral, analysis_run=None):
+def calculate_prediction(latitude, longitude, mineral, analysis_run=None, satellite_features=None):
 
     time_seed = 0.0
     if analysis_run is not None:
@@ -262,7 +263,7 @@ def calculate_prediction(latitude, longitude, mineral, analysis_run=None):
         except (TypeError, ValueError):
             time_seed = 0.0
 
-    selected_features = generate_features(
+    selected_features = satellite_features if satellite_features is not None else generate_features(
         latitude,
         longitude,
         mineral,
@@ -286,7 +287,7 @@ def calculate_prediction(latitude, longitude, mineral, analysis_run=None):
     # not a new geological measurement at the same location.
     variation = 0.0
 
-    if analysis_run:
+    if analysis_run and satellite_features is None:
         variation = (secrets.randbelow(901) / 100) - 4.5
 
     calibrated_score = 10.0 + (probability * 78.0)
@@ -435,7 +436,8 @@ def home():
 def health():
     return jsonify({
         "status": "online",
-        "message": "ASTROVA AI Backend is running"
+        "message": "ASTROVA AI Backend is running",
+        "satellite_configured": configured()
     })
 
 
@@ -452,9 +454,9 @@ def frontend_asset(filename):
 @app.route("/analyze", methods=["POST"])
 def analyze():
 
-    data = request.get_json()
+    data = request.get_json(silent=True)
 
-    if not data:
+    if not isinstance(data, dict) or not data:
 
         return jsonify({
             "error": "Request body must contain JSON data"
@@ -462,10 +464,10 @@ def analyze():
 
     try:
 
-        mineral = data.get(
+        mineral = str(data.get(
             "mineral",
             "Manganese"
-        ).strip().title()
+        )).strip().title()
 
         latitude = float(
             data.get(
@@ -482,6 +484,7 @@ def analyze():
         )
 
         analysis_run = str(data.get("analysis_run", ""))[:80]
+        source = data.get("data_source", "live")
 
     except (TypeError, ValueError):
 
@@ -489,11 +492,23 @@ def analyze():
             "error": "Invalid latitude or longitude"
         }), 400
 
+    if not math.isfinite(latitude) or not math.isfinite(longitude) or not -90 <= latitude <= 90 or not -180 <= longitude <= 180:
+        return jsonify({"error": "Latitude must be between -90 and 90; longitude between -180 and 180."}), 400
+    if mineral not in MINERAL_PROFILES or source not in ("live", "demo"):
+        return jsonify({"error": "Choose a supported mineral and live or demo data source."}), 400
+    satellite_features, satellite_metadata = None, None
+    if source == "live":
+        try:
+            satellite_features, satellite_metadata = sentinel.features(latitude, longitude)
+        except SatelliteError as error:
+            return jsonify({"error": str(error), "data_source": "live"}), error.status
+
     result = calculate_prediction(
         latitude,
         longitude,
         mineral,
-        analysis_run
+        analysis_run,
+        satellite_features
     )
 
     production_plan = build_five_day_production_plan(
@@ -516,6 +531,9 @@ def analyze():
         "prospectivity": result["prospectivity"],
 
         "scenario_variation": result["scenario_variation"],
+        "data_source": source,
+        "satellite": satellite_metadata,
+        "model_scope": "Random Forest trained on synthetic data; mineral prospectivity and operating plans remain unvalidated prototype estimates.",
 
         "production_plan": production_plan,
 
@@ -526,12 +544,14 @@ def analyze():
 
 
         "data_type":
-            "SIMULATED LOCATION-DEPENDENT SATELLITE FEATURES",
+            "COPERNICUS SENTINEL-2 L2A OBSERVATIONS" if source == "live" else "SIMULATED LOCATION-DEPENDENT SATELLITE FEATURES",
 
         "features":
             result["features"],
 
         "message": (
+            "Satellite inputs are real Sentinel-2 observations. The model was trained on synthetic data; its mineral scores and operating plans remain prototype estimates."
+            if source == "live" else
             "Prototype estimate using simulated location-dependent "
             "satellite-like features. Analysis runs include a small "
             "scenario refresh and are not measured geological concentration."
