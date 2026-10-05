@@ -20,7 +20,10 @@ CORS(app)
 
 MODEL_PATH = BASE_DIR / "backend" / "expo_model.pkl"
 
-model = joblib.load(MODEL_PATH)
+model_bundle = joblib.load(MODEL_PATH)
+models = model_bundle["models"]
+if set(models) != {"Manganese", "Nickel", "Cobalt"}:
+    raise RuntimeError("The model bundle must contain all three mineral classifiers.")
 
 
 # ============================================================
@@ -272,7 +275,9 @@ def calculate_prediction(latitude, longitude, mineral, analysis_run=None, satell
 
     features = pd.DataFrame([
         selected_features
-    ])
+    ], columns=model_bundle["feature_names"])
+
+    model = models[mineral]
 
     prediction = int(
         model.predict(features)[0]
@@ -531,9 +536,10 @@ def analyze():
         "prospectivity": result["prospectivity"],
 
         "scenario_variation": result["scenario_variation"],
+        "model_target": mineral,
         "data_source": source,
         "satellite": satellite_metadata,
-        "model_scope": "Random Forest trained on synthetic data; mineral prospectivity and operating plans remain unvalidated prototype estimates.",
+        "model_scope": "Selected mineral's Random Forest trained on synthetic labels; mineral prospectivity and operating plans remain unvalidated prototype estimates.",
 
         "production_plan": production_plan,
 
@@ -594,6 +600,8 @@ def heatmap():
         }), 400
 
     # Size of the displayed analysis area.
+    if mineral not in models or not math.isfinite(latitude) or not math.isfinite(longitude) or not -90 <= latitude <= 90 or not -180 <= longitude <= 180:
+        return jsonify({"error": "Choose a supported mineral and valid coordinates."}), 400
     # Approximately a regional demonstration grid.
 
     step = 0.08
