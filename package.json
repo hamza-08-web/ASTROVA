@@ -1,0 +1,12 @@
+{
+  "name": "astrova-frontend",
+  "version": "1.0.0",
+  "description": "ASTROVA Mineral Intelligence Platform",
+  "private": true,
+  "scripts": {
+    "build": "echo 'No build step required for static site'"
+  },
+  "dependencies": {
+    "@vercel/speed-insights": "^1.0.15"
+  }
+}
